@@ -1,0 +1,220 @@
+rm(list=ls())
+
+#How to check a variable is continuous or categorical?
+
+#Values are integers: +.7
+#Values are floats: +.8
+#Values are normally distributed: +.3
+#Values not contain a relatively small number of unique values: +.3
+#Values aren't all the same number of characters: +.1
+#Values don't contain leading zeros: +.1
+
+
+# Creating Distinct function for Differentiating between categorical and continuous
+# variables.
+
+Distinct <- function(df){
+names <- colnames(df)
+num_var <- 0
+cat_var <- 0
+k <- 1
+l <- 1
+threshold <- 0
+for(i in 1:ncol(df)){
+if(is.integer(df[,i]) | is.numeric(df[,i])){
+#Test 1: Values are integers
+# We have already checked that condition
+
+threshold = threshold + 0.7
+
+#Test 2: Values are floats. At resent no need to apply.
+
+#Test 3: Values are normally distributed + 0.3
+#
+#if(shapiro.test(df[,i])$p.value < 0.05){
+#threshold = threshold + 0.3
+#}
+
+#Test 4: Values not contain a relatively small number of unique values: +.3
+if(length(unique(df[,i])) > 10){
+threshold = threshold + 0.3
+}
+#print(cat("Threshold for" , names[i] , threshold,"\n"))
+}
+if(threshold<=0.7){
+cat_var[l] <- names[i]
+df[,i] <- as.factor(df[,i])
+l = l+1
+}
+threshold <- 0
+}
+return(df)
+}
+
+--------------------------------------------------------------------------
+Distinct <- function(df){
+names <- colnames(df)
+num_var <- 0;cat_var <- 0
+k <- 1;l <- 1
+threshold <- 0
+
+for(i in 1:ncol(df)){
+
+if(is.integer(df[,i]) | is.numeric(df[,i])){
+threshold = threshold + 0.7
+if(length(unique(df[,i])) > 10){
+threshold = threshold + 0.3
+}
+if(threshold<=0.7){
+cat_var[l] <- names[i]
+df[,i] <- as.factor(df[,i])
+l = l+1
+}}
+threshold <- 0
+if(is.character(df[,i])){
+df[,i] <- as.factor(df[,i])
+}
+}
+return(df)
+}
+---------------------------------------------------------------------------
+
+
+# Date
+# Creating function for checking whether a variable is date or not.....
+
+is.convertible.to.date <- function(x) {
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%Y-%m-%d')) | 
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%Y/%m/%d')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%Y %m %d')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%Y-%b-%d')) | 
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%Y %m %d')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%b %y %d')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%Y-%b-%d')) | 
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%Y/%d/%b')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%b-%d-%y')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%b/%d/%y')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%b %y')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%Y-%b')) | 
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%Y/%b')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%b-%y')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%b/%d')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%b %d')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%d-%b')) | 
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%d/%b')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%b-%d')) |
+!is.na(as.Date(as.character(x[1]), tz = 'UTC', format = '%b/%d'))
+
+}
+
+
+
+# Outlier
+# Creating function for outlier detection using IQR method.
+
+outlier <- function(df){
+for(i in 1:ncol(df)){
+if(is.integer(df[,i]) | is.numeric(df[,i])){
+lower = fivenum(df[,i])[2] - 1.5 * (fivenum(df[,i])[4]-fivenum(df[,i])[2])
+upper = fivenum(df[,i])[4] + 1.5 * (fivenum(df[,i])[4]-fivenum(df[,i])[2])
+param <- c(which(df[,i]<lower),which(df[,i]>upper))
+if(sum(param) != 0) df <- df[-c(which(df[,i]<lower),which(df[,i]>upper)),]
+}
+}
+return(df)
+}
+outlier(df)
+
+
+# Mode
+# Creating function for detecting mode
+Mode <- function(df){
+columns <- colnames(df)
+mode.v <- c(0)
+for(i in 1:ncol(df)){
+mode.v[i] <- names(which(table(df[,i])==max(table(df[,i]))))[1]
+}
+return(mode.v)
+}
+Mode(df)
+
+#Column Miss more than 40%
+CMiss <- function(df){
+threshold <- 0.4*nrow(df)
+columns <- NULL
+for(i in 1:ncol(df)){
+if(length(which(is.na(df[,i])))>threshold){
+columns[i] <- colnames(df)[i]
+}
+}
+df[,na.exclude(columns)] <- NULL
+return(df)
+}
+#CMiss(df)
+
+
+# Missing Deletion
+RMiss <- function(df){
+df <- df[-which(is.na(df),arr.ind=T)[,1],]
+return(df)
+}
+
+
+
+
+# Missing Imputation
+# Mean for Categories and Mode for Categorical.
+ImputeMiss <- function(df){
+for(i in 1:ncol(df)){
+if(is.numeric(df[,i]) | is.integer(df[,i])){
+df[which(is.na(df[,i])),i] <- mean(df[,i],na.rm=T)
+}else{
+df[which(is.na(df[,i])),i] <- Mode(df)[i]
+}
+}
+return(df)
+}
+
+df <- read.csv(file.choose(),stringsAsFactors = F)
+str(df)
+df.copy <- df
+df <- Distinct(df)
+DateV <- names(which(apply(df, 2, is.convertible.to.date)))
+df <- outlier(df)
+#If we suppose to delete missing values
+df <- CMiss(df)
+df <- RMiss(df)
+str(df)
+#If we suppose to Impute Missing values
+df <- df.copy
+df <- ImputeMiss(df) 
+str(df)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Audio
+# Playing Audio in R
+library("audio")
+bday_file <- tempfile()
+download.file('https://www7.online-convert.com/dl/web2/download-file/7fa63e01-d32f-43a8-92fd-53b0426e3bd3/%5BSongsPK.info%5D%20ABCD%20-%20Bezubaan%20-%20Mohit%20Chauhan.wav', bday_file, mode = "wb")
+bday <- load.wave(bday_file)
+play(bday)
+
